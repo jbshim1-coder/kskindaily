@@ -7,9 +7,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 const siteId = process.env.SITE_ID || "kskindaily";
-const siteName = process.env.SITE_NAME || "K Blog";
-const siteDesc = process.env.SITE_DESCRIPTION || "";
-const siteColor = process.env.SITE_COLOR || "#0071e3";
+const siteName = process.env.SITE_NAME || "K Skin Daily";
+const siteDesc = process.env.SITE_DESCRIPTION || "Your daily guide to Korean skincare and K-beauty trends";
+const siteColor = process.env.SITE_COLOR || "#e91e8c";
 
 interface Post {
   slug: string;

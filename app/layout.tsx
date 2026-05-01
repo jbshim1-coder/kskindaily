@@ -5,10 +5,10 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
-const siteName = process.env.SITE_NAME || "K Blog";
-const siteDomain = process.env.SITE_DOMAIN || "https://example.com";
-const siteDesc = process.env.SITE_DESCRIPTION || "Korean beauty and culture blog";
-const siteColor = process.env.SITE_COLOR || "#0071e3";
+const siteName = process.env.SITE_NAME || "K Skin Daily";
+const siteDomain = process.env.SITE_DOMAIN || "https://kskindaily.com";
+const siteDesc = process.env.SITE_DESCRIPTION || "Your daily guide to Korean skincare and K-beauty trends";
+const siteColor = process.env.SITE_COLOR || "#e91e8c";
 const kbbgUrl = process.env.KBBG_URL || "https://kbeautybuyersguide.com";
 
 export const metadata: Metadata = {
