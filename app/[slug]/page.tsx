@@ -9,10 +9,32 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 const siteId = process.env.SITE_ID || "kskindaily";
-const siteName = process.env.SITE_NAME || "K Skin Daily";
-const siteDomain = process.env.SITE_DOMAIN || "https://kskindaily.com";
-const siteColor = process.env.SITE_COLOR || "#e91e8c";
+const siteName = process.env.SITE_NAME || "K Blog";
+const siteDomain = process.env.SITE_DOMAIN || "";
+const siteColor = process.env.SITE_COLOR || "#0071e3";
 const kbbgUrl = process.env.KBBG_URL || "https://kbeautybuyersguide.com";
+const KMEDI_CHANNEL_ID = "UCpre0SxB5ElWp-LFMIqv_mw";
+
+async function getMatchingVideo(postTitle: string, postCategory: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${KMEDI_CHANNEL_ID}`,
+      { next: { revalidate: 3600 } }
+    );
+    const xml = await res.text();
+    const entries = [...xml.matchAll(/<yt:videoId>(.*?)<\/yt:videoId>[\s\S]*?<media:title>(.*?)<\/media:title>/g)];
+    if (!entries.length) return null;
+    const keywords = [...postTitle.toLowerCase().split(/\s+/), postCategory.toLowerCase()];
+    let best = { videoId: entries[0][1], score: 0 };
+    for (const [, videoId, videoTitle] of entries) {
+      const score = keywords.filter(kw => kw.length > 3 && videoTitle.toLowerCase().includes(kw)).length;
+      if (score > best.score) best = { videoId, score };
+    }
+    return best.videoId;
+  } catch {
+    return null;
+  }
+}
 
 interface Post {
   slug: string;
@@ -83,7 +105,10 @@ export default async function PostPage({
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const related = await getRelatedPosts(post.category, slug);
+  const [related, videoId] = await Promise.all([
+    getRelatedPosts(post.category, slug),
+    getMatchingVideo(post.title_en, post.category),
+  ]);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -147,6 +172,21 @@ export default async function PostPage({
             prose-hr:my-8"
           dangerouslySetInnerHTML={{ __html: post.content_en }}
         />
+
+        {/* K-MEDI TV 유튜브 쇼츠 */}
+        {videoId && (
+          <div className="mt-10 text-center">
+            <p className="text-xs text-gray-400 mb-3 uppercase tracking-wide">Watch on K-MEDI TV</p>
+            <div className="mx-auto rounded-2xl overflow-hidden bg-black" style={{ maxWidth: 320, aspectRatio: "9/16" }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`}
+                className="w-full h-full"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
 
         {/* 해시태그 */}
         {post.hashtags && post.hashtags.length > 0 && (
