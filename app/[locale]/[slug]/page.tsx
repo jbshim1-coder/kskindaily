@@ -3,6 +3,28 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { isLocale, LOCALES, LANG_LABELS, type Locale } from '../../lib/locales';
+import { localizeHashtags } from '../../lib/hashtag-translations';
+
+const BANNER_I18N: Record<string, { title: string; desc: string; cta: string }> = {
+  en: { title: "Find Your Perfect Korean Clinic", desc: "Get personalized AI recommendations from verified government data", cta: "Try KBBG AI Search →" },
+  zh: { title: "找到您理想的韩国诊所", desc: "基于政府认证数据的个性化AI推荐", cta: "试用 KBBG AI 搜索 →" },
+  ja: { title: "最適な韓国クリニックを見つけましょう", desc: "政府認定データによるパーソナライズAIレコメンド", cta: "KBBG AI検索を試す →" },
+  vi: { title: "Tìm Phòng Khám Hàn Quốc Phù Hợp Với Bạn", desc: "Đề xuất AI cá nhân hóa từ dữ liệu được chính phủ xác nhận", cta: "Thử KBBG AI Search →" },
+  th: { title: "ค้นหาคลินิกเกาหลีที่เหมาะกับคุณ", desc: "คำแนะนำ AI ส่วนตัวจากข้อมูลที่รัฐบาลรับรอง", cta: "ลอง KBBG AI Search →" },
+  ru: { title: "Найдите Идеальную Корейскую Клинику", desc: "Персонализированные AI-рекомендации на основе государственных данных", cta: "Попробовать KBBG AI Search →" },
+  mn: { title: "Таны Хувьд Тохирох Солонгос Эмнэлгийг Олоорой", desc: "Засгийн газраар баталгаажсан мэдээлэлд суурилсан AI зөвлөмж", cta: "KBBG AI хайлт туршаарай →" },
+};
+
+function mergeImages(translated: string, en: string): string {
+  const enImgs = (en?.match(/<img\b/g) || []).length;
+  const trImgs = (translated?.match(/<img\b/g) || []).length;
+  if (trImgs >= enImgs || enImgs === 0) return translated;
+  const figures = [...en.matchAll(/<figure\b[\s\S]*?<\/figure>|<img\b[^>]*\/?>/gi)].map(m => m[0]);
+  if (!figures.length) return translated;
+  const idx = translated.indexOf('</p>');
+  if (idx === -1) return translated + figures.join('');
+  return translated.slice(0, idx + 4) + figures.join('') + translated.slice(idx + 4);
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -147,7 +169,7 @@ export default async function LocalePostPage({
   ]);
 
   const title = getTitle(post, lang);
-  const content = getContent(post, lang);
+  const content = mergeImages(getContent(post, lang), post.content_en);
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -241,24 +263,22 @@ export default async function LocalePostPage({
 
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-gray-100">
-            {post.hashtags.map((tag: string) => (
+            {localizeHashtags(post.hashtags, lang).map((tag: string) => (
               <span key={tag} className="text-xs" style={{ color: siteColor }}>{tag}</span>
             ))}
           </div>
         )}
 
         <div className="mt-10 rounded-2xl p-6 text-white text-center" style={{ background: `linear-gradient(135deg, ${siteColor}, #1a1a2e)` }}>
-          <h2 className="text-lg font-bold mb-2">Find Your Perfect Korean Clinic</h2>
-          <p className="text-xs text-white/70 mb-4">
-            Get personalized AI recommendations from verified government data
-          </p>
+          <h2 className="text-lg font-bold mb-2">{(BANNER_I18N[lang] ?? BANNER_I18N.en).title}</h2>
+          <p className="text-xs text-white/70 mb-4">{(BANNER_I18N[lang] ?? BANNER_I18N.en).desc}</p>
           <a
             href={`${kbbgUrl}/${lang}/ai-search`}
             target="_blank"
             rel="noopener"
             className="inline-block px-6 py-3 bg-white text-gray-900 text-sm font-semibold rounded-full hover:bg-gray-100 transition-colors"
           >
-            Try KBBG AI Search →
+            {(BANNER_I18N[lang] ?? BANNER_I18N.en).cta}
           </a>
         </div>
 
