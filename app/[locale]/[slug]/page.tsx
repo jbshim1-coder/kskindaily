@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import sanitize from 'sanitize-html';
 import { isLocale, LOCALES, LANG_LABELS, type Locale } from '../../lib/locales';
 import { localizeHashtags } from '../../lib/hashtag-translations';
 
@@ -169,7 +170,11 @@ export default async function LocalePostPage({
   ]);
 
   const title = getTitle(post, lang);
-  const content = mergeImages(getContent(post, lang), post.content_en);
+  const SANITIZE_OPTS = {
+    allowedTags: ['h2','h3','h4','p','ul','ol','li','strong','em','a','br','hr','img','div','span','figure','figcaption','table','tr','td','th','thead','tbody'],
+    allowedAttributes: { a: ['href','target','rel'], img: ['src','alt','style','loading'], div: ['style','class'], span: ['class','style'], '*': ['class'] },
+  };
+  const content = mergeImages(sanitize(getContent(post, lang), SANITIZE_OPTS), sanitize(post.content_en, SANITIZE_OPTS));
 
   const articleSchema = {
     '@context': 'https://schema.org',
